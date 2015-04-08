@@ -1,0 +1,110 @@
+<head>
+  <title>Ranker</title>
+</head>
+
+<body>
+
+	<div class= "row container">
+
+	  <div class="col-md-3">
+		  <header>
+	      <h1>Roles ({{roleCount}})</h1>
+	    	<form class="new-role">
+	    		<input type="text" name="text" placeholder="Type to add new roles" />
+	    	</form>
+	    </header>
+
+	    <url>
+	      {{#each roles}}
+	      	{{> role}}
+	      {{/each}}
+	    </url>
+	  </div>
+
+	  <div class="col-md-6">
+	    <header>
+	      <h1>Users ({{userCount}})</h1>
+	    	<form class="new-user">
+	    		<input type="text" name="text" placeholder="Type to add new users" />
+	    	</form>
+	    </header>
+
+	    <url>
+	      {{#each users}}
+	      	{{> user}}
+	      {{/each}}
+	    </url>
+	  </div>
+
+
+	  <div class="col-md-3">
+	  	<header>
+	  		<h1>Optimization</h1>
+	  			{{> solutions}}
+	  	</header>
+	  </div>
+
+	</div>
+</body>
+
+<template name="solutions">
+	{{#each results}}
+	<li>
+	 	<div class= "row ">
+		 	<div class= "col-md-6">
+		 		{{this.user.user}}
+		 		#{{this.choice}}
+		 	</div>
+		 	<div class= "col-md-6">
+		 		{{this.role}}
+		 	</div>
+		</div>
+	</li>
+	{{/each}}
+</template>
+
+<template name="user">
+  <li class="{{#if checked}}checked{{/if}}">
+  	<button class="delete">&times;</button>
+  	<span class="text"> {{user}}</span>
+
+  	<div class= "row ">
+
+  		{{#each this.choices}}
+	  		<div class="col-md-3">
+	  		{{> dropdownCol}}
+	  		</div>
+  		{{/each}}
+
+		</div>
+  </li>
+</template>
+
+<template name="role">
+  <li class="{{#if checked}}checked{{/if}}">
+  	<button class="delete">&times;</button>
+  	<span class="text"> {{role}}</span>
+  </li>
+</template>
+
+<template name="dropdownCol">
+	<div class="dropdown">
+		#{{this.index}} 
+		<button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="true">
+			{{text}}
+	    <span class="caret"></span>
+	  </button>
+	  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+	    <div class="menu">
+	    	{{#each roles}}
+		    	{{> dropdownItem}}
+	    	{{/each}}
+      </div>
+	  </ul>
+	</div>
+</template>
+
+<template name="dropdownItem">
+	<li class="item"><a>{{role}}</a></li>
+</template>
+
