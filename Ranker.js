@@ -3,6 +3,10 @@ Roles = new Mongo.Collection("roles");
 
 if (Meteor.isClient) {
 
+  var DEPTH = 3;
+  var bestScore = 10000;
+  var bestSolution = [];
+  
   Template.body.helpers({
     example: [
       { text: "green"},
@@ -113,60 +117,58 @@ if (Meteor.isClient) {
       var users = Users.find().fetch();
       var roles = Roles.find().fetch();
       var solutions = [];
-      //assign everyone their first pick. 
-      //Randomly pick one to assign to second pick until it fits
 
       for (var i = 0; i < users.length; i++){
         solutions.push({"user" : users[i] , "role" : users[i].choices[0].text , "choice" : 1});
       }
 
-      var depth = 0;
-
-      console.log(lodash.uniq(lodash.pluck(solutions, "role")).length);
-      console.log(roles.length);
-
-      //until all roles have been assigned or all users have been moved
-      while (lodash.uniq(lodash.pluck(solutions, "role")).length < roles.length && depth < 20){
-        depth++;
-
-
-        //find a user who shares a role with another user 
-
-        var index = 2;
-
-        findMatchBlock: {
-          for (var i = 0; i < solutions.length; i++){
-            for (var j = i+1; j < solutions.length; j++){
-              // console.log(solutions[i].role , solutions[j].role);
-              if (solutions[i].role == solutions[j].role){
-                //TODO: if choice is more than 3, raise an error
-                if (solutions[i].choice > solutions[j].choice){
-                  index = i;
-                } else {
-                  index = j;
-                }
-                break findMatchBlock; 
-              }
-            }
-          }
-        }
-
-        // console.log(index);
-        //move them to their next choice
-        console.log("MOVING ", solutions[index].user.user, " FROM ", 
-          solutions[index].user.choices[solutions[index].choice-1].text, " TO ", 
-          solutions[index].user.choices[solutions[index].choice].text );
-        var newChoice = solutions[index].user.choices[solutions[index].choice];
-        solutions[index].role = newChoice.text;
-        solutions[index].choice++;
-        console.log(solutions);
-
-      }
-
-      return solutions;
-
-    }
+      bestScore = 1000;
+      bestSolution = [];
+      recursiveResults(solutions, roles, 0);
+      console.log("SOLUTION",bestSolution);
+      return bestSolution;
+    },
   });
+
+  recursiveResults = function (solutions, roles, depth) {
+    
+    if (depth > DEPTH || scoring(solutions) > bestScore){
+      return;
+    }
+    
+    if (lodash.uniq(lodash.pluck(solutions, "role")).length == roles.length){
+      bestScore = scoring(solutions);
+      bestSolution = solutions;
+      return;
+    } 
+
+    for (var index = 0; index < solutions.length; index++){
+      if (solutions[index].choice < 3){
+      var solutionsCopy = $.extend(true, [], solutions); //clone
+      moveRank(solutionsCopy, index);
+      recursiveResults(solutionsCopy, roles, depth+1);
+      } 
+    }
+  }
+
+  moveRank = function (solutions, index){
+    var newChoice = solutions[index].user.choices[solutions[index].choice];
+    solutions[index].role = newChoice.text;
+    solutions[index].choice++;
+    return solutions;
+  };
+
+  scoring = function (solutions){
+    if (!solutions){
+      return bestScore + 1;
+    }
+
+    var score = 0;
+    for (var i = 0; i < solutions.length; i++){ 
+      score += Math.pow((solutions[i].choice - 1),2);
+    }
+    return score;
+  }
 
   Template.dropdownCol.rendered = function(){
     $('.menu').dropdown(); //gets called N times
